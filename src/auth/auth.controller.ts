@@ -13,6 +13,7 @@ import { RegisterRequest } from './dto/register.dto';
 import { LoginRequest } from './dto/login.dto';
 import type { Request, Response } from 'express';
 import { Authorization } from './decorators/authorization.decorator';
+import { Authorized } from './decorators/authorized.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -54,7 +55,7 @@ export class AuthController {
   @Authorization()
   @Get('@me')
   @HttpCode(HttpStatus.OK)
-  me(@Req() req: Request) {
-    return req.user;
+  me(@Authorized('id') id: string) {
+    return { id };
   }
 }
