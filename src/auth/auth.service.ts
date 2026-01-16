@@ -10,15 +10,15 @@ import { hash, verify } from 'argon2';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './interfaces/jwt.interface';
-import type { StringValue } from 'ms';
+import * as ms from 'ms';
 import { LoginRequest } from './dto/login.dto';
 import type { Request, Response } from 'express';
 import { isDev } from 'src/utils/is-dev.utils';
 
 @Injectable()
 export class AuthService {
-  private readonly JWT_ACCESS_TOKEN_TTL: StringValue;
-  private readonly JWT_REFRESH_TOKEN_TTL: StringValue;
+  private readonly JWT_ACCESS_TOKEN_TTL: ms.StringValue;
+  private readonly JWT_REFRESH_TOKEN_TTL: ms.StringValue;
   private readonly COOKIE_DOMAIN: string;
 
   constructor(
@@ -26,10 +26,10 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
   ) {
-    this.JWT_ACCESS_TOKEN_TTL = configService.getOrThrow<StringValue>(
+    this.JWT_ACCESS_TOKEN_TTL = configService.getOrThrow<ms.StringValue>(
       'JWT_ACCESS_TOKEN_TTL',
     );
-    this.JWT_REFRESH_TOKEN_TTL = configService.getOrThrow<StringValue>(
+    this.JWT_REFRESH_TOKEN_TTL = configService.getOrThrow<ms.StringValue>(
       'JWT_REFRESH_TOKEN_TTL',
     );
 
@@ -138,7 +138,7 @@ export class AuthService {
     this.setCookie(
       res,
       refreshToken,
-      new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+      new Date(Date.now() + ms(this.JWT_REFRESH_TOKEN_TTL)),
     );
 
     return { accessToken };
@@ -148,11 +148,11 @@ export class AuthService {
     const payload: JwtPayload = { id };
 
     const accessToken = this.jwtService.sign(payload, {
-      expiresIn: this.JWT_ACCESS_TOKEN_TTL,
+      expiresIn: ms(this.JWT_ACCESS_TOKEN_TTL),
     });
 
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: this.JWT_REFRESH_TOKEN_TTL,
+      expiresIn: ms(this.JWT_REFRESH_TOKEN_TTL),
     });
 
     return {
